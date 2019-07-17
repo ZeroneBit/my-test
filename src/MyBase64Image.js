@@ -1,6 +1,6 @@
 import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import { Button, LinearProgress, TextField, Snackbar } from '@material-ui/core';
+import { Button, LinearProgress, TextField, Snackbar, Container } from '@material-ui/core';
 import { green } from '@material-ui/core/colors';
 
 class MyBase64Image extends React.Component {
@@ -10,6 +10,7 @@ class MyBase64Image extends React.Component {
         this.state = {
             progress: 0,
             snackbarOpen: false,
+            showImage: false,
         }
 
         this.textFieldRef = React.createRef();
@@ -19,7 +20,7 @@ class MyBase64Image extends React.Component {
         let source = event.target;
         let file = source.files[0];
         if (window.FileReader) {
-            this.setState({ progress: 0, base64: "" });
+            this.setState({ progress: 0, base64: "", showImage: false });
             let reader = new FileReader();
             reader.onprogress = (e) => {
                 if (e.lengthComputable) {
@@ -48,8 +49,12 @@ class MyBase64Image extends React.Component {
         }
     }
 
-    handleSnackbarClose(event){
-        this.setState({snackbarOpen: false});
+    oRestore(event) {
+        this.setState({ showImage: true });
+    }
+
+    handleSnackbarClose(event) {
+        this.setState({ snackbarOpen: false });
     }
 
     render() {
@@ -86,13 +91,27 @@ class MyBase64Image extends React.Component {
                         value={this.state.base64}
                         inputRef={i => { this.textFieldRef = i; }}
                     ></TextField>
+                </div>
+                <div>
                     <Button variant="contained" className={classes.button} color="primary" onClick={this.oCopy.bind(this)}>
                         Copy All
                     </Button>
+                    <Button variant="contained" className={classes.button} color="secondary" disabled={!this.state.base64} onClick={this.oRestore.bind(this)}>
+                        Restore to image
+                    </Button>
                 </div>
                 <div>
+                    <Container>
+                        {
+                            this.state.showImage && this.state.base64 &&
+                            <img src={this.state.base64}></img>
+                        }
+                    </Container>
+                </div>
+
+                <div>
                     <Snackbar
-                        anchorOrigin={{ horizontal: "center", vertical:"top" }}
+                        anchorOrigin={{ horizontal: "center", vertical: "top" }}
                         autoHideDuration={3000}
                         message="Copied Successfully"
                         onClose={this.handleSnackbarClose.bind(this)}
@@ -113,7 +132,7 @@ const styles = theme => ({
         display: 'none',
     },
 
-    success:{
+    success: {
         backgroundColor: green[600],
     }
 });
