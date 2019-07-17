@@ -9,7 +9,7 @@ import theme from './theme';
 //ReactDOM.render(<App />, document.getElementById('root'));
 ReactDOM.render(
     <ThemeProvider theme={theme}>
-        <CssBaseline ></CssBaseline>
+        <CssBaseline />
         <App></App>
     </ThemeProvider>,
 

@@ -1,32 +1,22 @@
 import React from 'react';
-import Container from '@material-ui/core/Container';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Link from '@material-ui/core/Link';
-import ProTip from './ProTip';
+import MyLayout from './MyLayout';
+import MyTimestamp from './MyTimestamp';
+import MyBase64Image from './MyBase64Image';
 
-function MadeWithLove() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Built with love by the '}
-      <Link color="inherit" href="https://material-ui.com/">
-        Material-UI
-      </Link>
-      {' team.'}
-    </Typography>
-  );
+class App extends React.Component{
+
+  render(){
+    const {classes} = this.props;
+
+    return (
+      <div>
+        <MyLayout></MyLayout>
+        {/* <MyTimestamp></MyTimestamp> */}
+        <MyBase64Image></MyBase64Image>
+      </div>
+    );
+
+  }
 }
 
-export default function App() {
-  return (
-    <Container maxWidth="sm">
-      <Box my={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Create React App v4-beta example
-        </Typography>
-        <ProTip />
-        <MadeWithLove />
-      </Box>
-    </Container>
-  );
-}
+export default App;
