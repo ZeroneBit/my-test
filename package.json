@@ -9,6 +9,7 @@
     "@material-ui/pickers": "^3.1.2",
     "gh-pages": "^2.0.1",
     "moment": "^2.24.0",
+    "peerjs": "^1.0.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router": "^5.0.1",
@@ -33,9 +34,10 @@
       "not op_mini all"
     ],
     "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
+      "last 1 version",
+      "> 0.2%",
+      "maintained node versions",
+      "not dead"
     ]
   },
   "homepage": "https://zeronebit.github.io/my-test"
