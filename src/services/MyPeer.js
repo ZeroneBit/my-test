@@ -14,6 +14,7 @@ export default class MyPeer extends EventEmitter {
         this.peer = null;
         this.pairs = {};
         this.outgoing = [];
+        this.messageCache = {};
 
         this._initializePeer();
     }
@@ -32,6 +33,7 @@ export default class MyPeer extends EventEmitter {
 
     requestFileInfos(remoteId) {
         this._ensureConnection(remoteId, (conn) => {
+            console.log("Sending " + EventTypes.Request_File_Infos + conn.open);
             const message = {
                 type: EventTypes.Request_File_Infos,
             };
@@ -66,10 +68,24 @@ export default class MyPeer extends EventEmitter {
     _initializePeer() {
         this.peer = new Peer(null, {
             debug: 3,
-            confi: {
+            config: {
                 'iceServers': [
-                    { url: 'stun:stun.services.mozilla.com' },
-                    { url: 'turn:numb.viagenie.ca', credential: 'muazkh', username: 'webrtc@live.com' }
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    {
+                        urls: 'turn:numb.viagenie.ca',
+                        credential: 'muazkh',
+                        username: 'webrtc@live.com'
+                    },
+                    {
+                        urls: 'turn:192.158.29.39:3478?transport=udp',
+                        credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+                        username: '28224511:1379330808'
+                    },
+                    {
+                        urls: 'turn:192.158.29.39:3478?transport=tcp',
+                        credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+                        username: '28224511:1379330808'
+                    }
                 ],
             },
         });
@@ -88,7 +104,9 @@ export default class MyPeer extends EventEmitter {
         if (!pair || !pair.conn || !pair.conn.open) {
             this.pairs[conn.peer] = { conn };
             console.log("_peerConnection " + conn.open);
-            this._initializeConnection(conn);
+            this._initializeConnection(conn, (conn) => {
+                this._ClearCachedMessages(conn);
+            });
         }
     }
     _peerDisconnected() { }
@@ -109,9 +127,9 @@ export default class MyPeer extends EventEmitter {
             console.log("this.peer.connect" + pair.conn.open);
             this._initializeConnection(pair.conn, callback);
             return;
+        } else {
+            callback && callback(pair.conn);
         }
-
-        callback && callback(pair.conn);
     }
     _initializeConnection(conn, openCallback) {
         conn.on('open', () => {
@@ -133,13 +151,14 @@ export default class MyPeer extends EventEmitter {
     }
 
     _onJSONData(data, conn) {
+        console.log("_onJSONData " + data.type + conn.open);
         switch (data.type) {
             case EventTypes.Request_File_Infos: {
                 const message = {
                     type: EventTypes.Response_File_INfos,
                     payload: Array.from(this.outgoing, function (f) { return { name: f.name, size: f.size, type: f.type, peer: this.id }; }, this.peer),
                 };
-                conn.send(message);
+                this._SendMessage(conn, message);
             } break;
             case EventTypes.Response_File_INfos: {
                 let pair = this.pairs[conn.peer];
@@ -178,7 +197,7 @@ export default class MyPeer extends EventEmitter {
                     index: chunkIndex
                 },
             };
-            conn.send(message);
+            this._SendMessage(conn, message);
         });
     }
 
@@ -214,7 +233,7 @@ export default class MyPeer extends EventEmitter {
         let slice = blob.slice || blob.mozSlice || blob.webkitSlice;
         let slicedBlob = slice.call(blob, start, end);
 
-        reader.onload = function (event) {
+        reader.onload = (event) => {
             if (reader.readyState !== FileReader.DONE) {
                 return;
             }
@@ -228,9 +247,29 @@ export default class MyPeer extends EventEmitter {
                     last: isLastChunk,
                 },
             };
-            conn.send(message);
+            this._SendMessage(conn, message);
         }
         reader.readAsArrayBuffer(slicedBlob);
+    }
+
+    _SendMessage(conn, message) {
+        if (conn.open) {
+            conn.send(message);
+        } else {
+            let messages = this.messageCache[conn.peer];
+            if (!messages) {
+                messages = this.messageCache[conn.peer] = [];
+            }
+            messages.push(message);
+        }
+    }
+    _ClearCachedMessages(conn) {
+        let messages = this.messageCache[conn.peer];
+        if (messages) {
+            (messages).forEach(message => {
+                this._SendMessage(conn, message);
+            });
+        }
     }
 
 }
